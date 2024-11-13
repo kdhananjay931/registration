@@ -1,13 +1,17 @@
 package com.api.controller;
 
 import com.api.entity.Registration;
+import com.api.payload.RegistrationDto;
 import com.api.service.RegistrationService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/registration")
@@ -20,17 +24,22 @@ public class RegistrationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Registration>> getAllRegistrations() {
-        List<Registration> registrations = registrationService.getRegistrations();
-        return new ResponseEntity<>(registrations, HttpStatus.OK);
+    public ResponseEntity<List<RegistrationDto>> getAllRegistrations() {
+        List<RegistrationDto> dtos = registrationService.getRegistrations();
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
     @PostMapping()
-    public ResponseEntity<Registration> createRegistration(
-            @RequestBody Registration registration
+    public ResponseEntity<?> createRegistration(
+           @Valid @RequestBody RegistrationDto registrationDto,
+           BindingResult result
     ) {
-        Registration reg = registrationService.createRegistration(registration);
-        return new ResponseEntity<>(reg, HttpStatus.CREATED);
+        if(result.hasErrors()){
+            return new ResponseEntity<>(Objects.requireNonNull(result.getFieldError()).getDefaultMessage(),HttpStatus.CREATED);
+        }
+        RegistrationDto regDto = registrationService.createRegistration(registrationDto);
+
+        return new ResponseEntity<>(regDto, HttpStatus.CREATED);
 
     }
 
@@ -51,5 +60,14 @@ public class RegistrationController {
 
         Registration updateReg = registrationService.updateRegistration(id, registration);
         return new ResponseEntity<>(updateReg, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RegistrationDto> getRegistrationById(
+            @PathVariable long id
+
+    ){
+        RegistrationDto dto= registrationService.getRegistrationById(id);
+        return new ResponseEntity<>(dto,HttpStatus.OK);
     }
 }
